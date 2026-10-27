@@ -9,6 +9,8 @@ const char *WIFI_PASS = "";
 const char* MQTT_HOST = "broker.hivemq.com";
 const int   MQTT_PORT = 1883;
 
+const char* TOPIC_TELEMETRIA = "elt73a/grupo-e/telemetria";
+
 WiFiClient   wifiClient;
 PubSubClient mqtt(wifiClient);
 
@@ -42,5 +44,19 @@ void setup() {
 }
 
 void loop() {
+  if (!mqtt.connected()) conectaMQTT();
   mqtt.loop();
+
+  static unsigned long ultimo = 0;
+  if (millis() - ultimo > 2000) {
+    ultimo = millis();
+
+    static int n = 0;
+    n++;
+    float temp = 25.0 + (n % 10);
+
+    String payload = String("{\"n\":") + n + ",\"temp\":" + temp + "}";
+    mqtt.publish(TOPIC_TELEMETRIA, payload.c_str());
+    Serial.print("Publicado: "); Serial.println(payload);
+  }
 }
